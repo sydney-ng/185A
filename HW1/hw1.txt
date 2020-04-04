@@ -1,0 +1,96 @@
+a. let x = 4 + 5 in (3 * x)
+
+	=> let x = 9 in (3 * x) // arithmetic 
+	=> 9 * 3 // let reduction 
+	=> 27 // arithmetic 
+
+b. (\x -> 3 * x) (4 + 5)
+
+	=> (\x -> 3 * x) (9) // arithmetic
+	=> 3 * 9 // lambda reduction 
+	=> 27 
+
+c. ((\x -> (\y -> x + (3 * y))) 4) 1 
+
+	=> (\y -> 1 + (3 * y))) 4 // lambda reduction 
+	=> 1 + (3 * 4) // lambda reduction 
+	=> 1 + 12 // arithmetic
+	=> 13 // arithmetic 
+
+d. let x = 4 in (let y = 1 + x in (x + (3 * y)))
+
+	=> (let y = 1 + 3 in (4 + (3 * y))) // let reduction 
+	=> (let y = 4 in (4 + (3 * y))) // arithmetic 
+	=> (4 + (3 * 4)) // let reduction 
+	=> (4 + 12) // arithmetic 
+	=> 16 // arithmetic
+
+e. ((\x -> (\y -> y + (3 * y))) 4) 1
+
+	=> (\y -> y + (3 * y))) 4)// lambda reduction 
+	=> (4 + (3 * 4)) // lambda reduction 
+	=> (4 + 12) // arithmetic
+	=> 16 // arithmetic 
+
+f. (\y -> y + ((\y -> 3 * y) 4)) 5
+
+	=> 5 + ((\y -> 3 * y) 4 // lambda reduction 
+	=> 5 + (3 * 4) // lambda reduction 
+	=> 5 + 12 // arithmetic 
+	=> 17 // arithmetic 
+
+g. (\y -> ((\y -> 3 * y) 4) + y) 5
+
+	=> (\y -> 3 * y) 4) + 5 // lambda reduction 
+	=> (3 * 4) + 5 // lambda reduction 
+	=> 12 + 5 // arithmet
+	=> 17 // arithmet
+
+h. (\x -> x * (let x = 3 * 2 in (x + 7)) + x) 4
+
+	=> 4 * (let x = 3 * 2 in (x + 7)) + 4 // let reduction 
+	=> 4 * (let x = 6 in (x + 7)) + 4 // arithmetic
+	=> 4 * (6 + 7) + 4 // let reduction 
+	=> 4 * (13) + 4 // arithmetic
+	=> 52 + 4 // arithmetic
+	=> 56 // arithmetic
+
+i. g ((let x = 4 in (\y -> x + y)) 2)
+   g = \ z -> z + 4
+
+	=> g ((\y -> 4 + y)) 2)// let reduction 
+	=> g (4 + 2) // lambda reduction 
+	=> g(6) // arithmetic
+
+	=> (\z -> z + 4) 6 // substitution of function g 
+	=> 6 + 4 // lambda reductiion 
+	=> 10 // arithmetic 
+
+j. let x = 5 in (\z -> x * z)
+
+	=> (\z -> 5 * z) // let reduction 
+	=> ERROR: there is nothing for lambda reduction 
+
+k. (\x -> (\z -> x * z)) 5
+	
+	=> (\z -> 5 * z) // lambda reduction 
+	=> ERROR: there is nothing for lambda reduction 
+
+l. f ((\fn -> fn Rock) (\x -> whatItBeats x))
+	=> f ((\x -> whatItBeats x) Rock)) //lambda reduction 
+	=> f (whatItBeats Rock) // lambda reduction 
+	=> f (Scissors) // function simplification
+	=> 99 // function simplification 
+
+	 f ((\f 1 -> f 1 Rock) (\x -> whatItBeats x))
+
+m. ((\f -> (\x -> f (f x))) whatItBeats) Paper
+	=> (\x -> whatItBeats (whatItBeats x))) Paper // lambda reduction
+	=> whatItBeats (whatItBeats Paper))) // lambda reduction 
+	=> whatItBeats (Scissors) // function simplification 
+	=> Paper // function simplification 
+
+
+
+
+

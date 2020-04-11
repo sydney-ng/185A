@@ -13,29 +13,21 @@ import Recursion
 --            Write all your code below this line.
 
 times :: Numb -> Numb -> Numb
-times m n = case m of E -> S E  
-                      S n' -> case n' of E -> S E 
-                                         S m' -> times m' n' 
+times a b = case a of E -> case b of S E -> E
+                                     S b' -> S (times a b') 
+                      S a' -> S (times a' b)
+
+-- times m n = case m of E -> case n of E -> E ss
+--                                     S n'' -> S (times E n'')
+--                      S m' -> case n of E -> E  
+--
+--                                       S n' -> S (times m n')
+-- pseudocode:
+-- if m = 0 -> decrement n until 0
+--    else -> keep m the same, decrement n til zero s
 
 equal :: Numb -> Numb -> Bool 
 equal n m = case m of E -> case n of E -> True
                                      S n' -> False 
                       S m' -> case n of E -> False 
                                         S n'' -> equal n'' m'
-
-bigger :: Numb -> Numb -> Numb
-bigger = undefined
-
-count :: (a -> Bool) -> [a] -> Numb
-count = undefined
-
-remove :: (a -> Bool) -> [a] -> [a]
-remove a b = undefined
--- 
-
-prefix :: Numb -> [a] -> [a]
-prefix = undefined
--- 
-
-depth :: WFF -> Numb
-depth = undefined

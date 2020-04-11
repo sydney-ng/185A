@@ -14,21 +14,23 @@ import Recursion
 
 times :: Numb -> Numb -> Numb
 times a b = case a of E -> E 
-                      one -> case b of E -> E
-                                       S b' -> S (times a b')
-                      S a' -> S (times a' b)
-
--- times m n = case m of E -> case n of E -> E ss
---                                     S n'' -> S (times E n'')
---                      S m' -> case n of E -> E  
---
---                                       S n' -> S (times m n')
--- pseudocode:
--- if m = 0 -> decrement n until 0
---    else -> keep m the same, decrement n til zero s
+                      S E -> case b of E -> E
+                                       S b' -> add a (times a b')
+                      S a' -> case b of E -> E  
+                                        S b' -> add b (times a' b)
 
 equal :: Numb -> Numb -> Bool 
 equal n m = case m of E -> case n of E -> True
                                      S n' -> False 
                       S m' -> case n of E -> False 
                                         S n'' -> equal n'' m'
+
+count :: (a -> Bool) -> [a] -> Numb
+count fx list = case list of [] -> E 
+                             x: xs -> case fx x of True -> add (S E) (count fx xs)
+                                                   False -> count fx xs
+
+remove :: (a -> Bool) -> [a] -> [a]
+remove fx list = case list of [] -> []
+                              x: xs -> case fx x of True -> remove fx xs
+                                                    False -> x : (remove fx xs)

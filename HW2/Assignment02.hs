@@ -34,3 +34,7 @@ remove :: (a -> Bool) -> [a] -> [a]
 remove fx list = case list of [] -> []
                               x: xs -> case fx x of True -> remove fx xs
                                                     False -> x : (remove fx xs)
+prefix :: Numb -> [a] -> [a]
+prefix number list = case number of E -> [] 
+                                    S number' -> case list of [] -> [] 
+                                                              x: xs -> x : (prefix number' xs)

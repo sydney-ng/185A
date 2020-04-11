@@ -13,8 +13,9 @@ import Recursion
 --            Write all your code below this line.
 
 times :: Numb -> Numb -> Numb
-times a b = case a of E -> case b of S E -> E
-                                     S b' -> S (times a b') 
+times a b = case a of E -> E 
+                      one -> case b of E -> E
+                                       S b' -> S (times a b')
                       S a' -> S (times a' b)
 
 -- times m n = case m of E -> case n of E -> E ss

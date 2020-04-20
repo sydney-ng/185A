@@ -34,8 +34,13 @@ pretty str = case isChained str of True -> case str of ((t_head, t_tail): []) ->
 --                                                -> (tail xs)
 precedes :: (Eq sy) => SLG sy -> sy -> [sy]
 precedes grammar target = case grammar of (start , end , []) -> [] 
-                                         (start , end , (x, xs)  : rest) -> case (xs == target) of True -> x: precedes (start , end , rest) target 
-                                                                                                   False -> precedes (start , end , rest) target
+                                          (start , end , (x, xs)  : rest) -> case (xs == target) of True -> x: precedes (start , end , rest) target 
+                                                                                                    False -> precedes (start , end , rest) target
+
+follows :: (Eq sy) => SLG sy -> sy -> [sy]
+follows grammar target = case grammar of (start , end , []) -> [] 
+                                         (start , end , (x, xs) : rest) -> case (x == target) of True -> xs: follows (start , end , rest) target 
+                                                                                                 False -> follows (start , end , rest) target                                                                                                   
 -- break grammar down into each element 
 -- check if it has at least 2 items
 -- if snd item == target, append the fst item 

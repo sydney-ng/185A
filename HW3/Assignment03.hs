@@ -16,23 +16,38 @@ bigrams :: [a] -> [(a, a)]
 bigrams str = case str of (x:[]) -> [] -- if it's the last letter, return nothing, end recursion 
                           (x:xs) -> (x, (head xs)) : bigrams (xs) -- create a tuple with the first two letters, recurse through rest 
                           
---pretty :: (Eq a) => [(a, a)] -> a
---pretty [] = [] -- empty string return empty  
---pretty :: (a,a) -> a 
---pretty str = case fst str of [] -> []
---                  isChained 
---isChained str of True -> head (fst str) : pretty (snd str)
---                 False -> []
--- if isChained is true, return only the first element 
+pretty :: (Eq a) => [(a, a)] -> [a]   
+pretty str = case isChained str of True -> case str of ((t_head, t_tail): []) -> [t_head, t_tail] -- for last element 
+                                                       ((t_head, t_tail): rest) -> t_head : pretty rest
+                                                       [] -> []
+                                   False -> [] 
 
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
+-- (Eq sy) is for equality 
+--follows :: (Eq sy) => SLG sy -> sy -> [sy]
+--follows ([start]:[end]:[]) target  = []
+--follows ([start]:[end]:([x, xs]: [])) target = case target of xs -> [x]
+--follows ([start]: [end] : ([x, xs]: rest)) target = case target of xs -> x : follows ([start]:[end]: [rest]) target
+-- case transition of ((head, tail): []) -> [] 
 
-follows :: (Eq sy) => SLG sy -> sy -> [sy]
-follows = undefined
-
+--                                                -> (tail xs)
 precedes :: (Eq sy) => SLG sy -> sy -> [sy]
-precedes = undefined
+precedes grammar target = case grammar of (start , end , []) -> [] 
+                                         (start , end , (x, xs)  : rest) -> case (xs == target) of True -> x: precedes (start , end , rest) target 
+                                                                                                   False -> precedes (start , end , rest) target
+-- break grammar down into each element 
+-- check if it has at least 2 items
+-- if snd item == target, append the fst item 
+-- else return []
+
+--follows :: (Eq sy) => SLG sy -> sy -> [sy]
+--follows (s, e, transitions) target = filter (\x -> (x 'elem' [target])) [transitions]
+
+--follows2 :: (Eq sy) => SLG sy -> sy -> [sy]
+--follows2 grammar target = map (filter (\n -> snd n == target)) grammar
+
+--precedes (start, final, transition) target = filter (\x -> (`elem` target x)) transition
 
 -- MORE EXAMPLE USAGE:
 -- forward g2 1 "the"
@@ -61,7 +76,9 @@ generates = undefined
 -------------------------------------------------------------------------------
 
 occurrences :: Int -> (RegEx a) -> (RegEx a)
-occurrences = undefined
+occurrences 0 rest = One -- one is empty Set  
+occurrences n r = case n of 0 -> One 
+                            n -> Concat r (occurrences (n-1) r)
 
 optional :: (RegEx a) -> (RegEx a)
-optional = undefined
+optional r = Alt r One -- one is empty set 

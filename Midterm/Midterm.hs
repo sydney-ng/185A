@@ -28,8 +28,21 @@ precedes (ProbSLG grammar) target = case grammar of (start , end , []) -> []
 valP :: Ord sy => ProbSLG sy -> [sy] -> Double
 valP = undefined
 
+-- ex: valP g1 ["the", "cat"] --> words 
+-- take first word, make sure that it is the start 
+-- take last word make sure it is the end 
+-- run P' on it 
+
 valP' :: Ord sy => ProbSLG sy -> [sy] -> Double
-valP' = undefined
+valP' g l = case l of [] -> 0
+                      (first_word : []) -> 1 -- return 1 beause we are done  
+                      (first_word : rest_words) -> case follows g first_word of [(answer, chance)] -> chance * (valP' g rest_words)
+
+-- ex: valP' g1 ["very", "fat", "cat"]  --> words_list 
+-- each time take 1 word off of words_list 
+-- check for what follows head of words_list
+-- case of true, take it and run again w/ the next (Compound with probability) 
+-- false (you can't have anything following words & return 0) 
 
 -------------------------------------------------------------------------------
 -- Problem 2:

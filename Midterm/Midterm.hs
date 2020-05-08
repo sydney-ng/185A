@@ -34,10 +34,14 @@ valP = undefined
 -- run P' on it 
 
 valP' :: Ord sy => ProbSLG sy -> [sy] -> Double
-valP' g l = case l of [] -> 0
-                      (first_word : []) -> 1 -- return 1 beause we are done  
-                      (first_word : rest_words) -> case follows g first_word of [(answer, chance)] -> chance * (valP' g rest_words)
+valP' g l = case l of (first_word : xs_head : []) -> helper (follows g first_word) xs_head -- return 1 beause we are done  
+                      (first_word : xs_head : xs_tail ) -> (helper (follows g first_word) xs_head) * (valP' g (xs_head : xs_tail))
 
+helper :: Ord sy => [(sy, Double)] -> sy -> Double 
+helper [] _ = 1.0
+helper ((answer, chance) : []) _ = chance
+helper ((answer, chance): rest) target = case (answer == target) of True -> chance 
+                                                                    False -> helper rest target 
 -- ex: valP' g1 ["very", "fat", "cat"]  --> words_list 
 -- each time take 1 word off of words_list 
 -- check for what follows head of words_list

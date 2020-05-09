@@ -25,14 +25,7 @@ precedes :: Ord sy => ProbSLG sy -> sy -> [(sy, Double)]
 precedes (ProbSLG grammar) target = case grammar of (start , end , []) -> [] 
                                                     (start , end , (x, xs, val)  : rest) -> case (xs == target) of True -> (x, val): precedes (ProbSLG (start , end , rest)) target
                                                                                                                    False -> precedes (ProbSLG (start , end , rest)) target                                                                                                                                                                                                 
---valP :: Ord sy => ProbSLG sy -> [sy] -> Double
---valP g l = (check_first_last (head l) (last l)) 
 
---check_first_last :: Ord sy => ProbSLG [sy] -> sy -> sy -> Double 
---check_first_last (ProbSLG grammar) l_head l_tail  = case grammar of ((start, s_chance) : (end, e_chance) : trans) -> case (l_head == start) of True -> case (l_tail == end) of True -> s_chance * e_chance
---                                                                                                                                                                               False -> 0 
---                                                                                                                                               False -> 0
---                                                                     _ -> -1
 -- ex: valP g1 ["the", "cat"] --> words 
 -- take first word, make sure that it is the start 
 -- take last word make sure it is the end 

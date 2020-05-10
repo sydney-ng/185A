@@ -1,0 +1,33 @@
+Sample output for buildProbSLG:
+
+    λ> buildProbSLG corpus1
+    ===== Starting symbols: ===
+    False  0.4
+    True   0.6
+
+    ===== Final symbols: ======
+    False  0.4
+    True   0.6
+
+    ===== Transitions: ========
+    False  False  0.3333333333333333
+    False  True   0.6666666666666666
+    True   False  0.5
+    True   True   0.5
+
+Sample output for posProbSLG (note that yours can differ):
+
+    λ> posProbSLG corpus3
+    ===== Starting symbols: ===
+    "D"  1.0
+
+    ===== Final symbols: ======
+    "N"  1.0
+
+    ===== Transitions: ========
+    "Adj"  "N"    1.0
+    "Adv"  "Adj"  0.8
+    "Adv"  "Adv"  0.2
+    "D"    "Adj"  0.125
+    "D"    "Adv"  0.25
+    "D"    "N"    0.625

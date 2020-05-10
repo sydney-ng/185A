@@ -2,6 +2,8 @@ module Midterm where
 
 import ProbSLG
 import Helpers
+import Data.List (nub)
+
 
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
@@ -61,10 +63,70 @@ helper ((answer, chance): rest) target = case (answer == target) of True -> chan
 -------------------------------------------------------------------------------
 
 buildProbSLG :: Ord a => Corpus a -> ProbSLG a
-buildProbSLG = undefined
+buildProbSLG corpus = ProbSLG ((calculate_start_probability corpus), (calculate_end_probability corpus), [])
 
+calculate_start_probability :: Ord a => Corpus a -> [(a, Double)] 
+calculate_start_probability corpus = let frequency_pairs = frequencies (extract_starts corpus) 
+                                         total = total_number_of_items corpus 
+                                     in 
+                                         map (\(symbol, probability) -> (symbol, divide probability total) ) frequency_pairs
+
+calculate_end_probability :: Ord a => Corpus a -> [(a, Double)] 
+calculate_end_probability corpus = let frequency_pairs = frequencies (extract_end corpus) 
+                                       total = total_number_of_items corpus 
+                                     in 
+                                         map (\(symbol, probability) -> (symbol, divide probability total) ) frequency_pairs
+
+--calculate_trans_probability :: Ord a => Corpus a -> [((a, a), Double)]
+--calculate_trans_probability corpus = let frequency_pairs = frequencies (get_trans corpus)
+--                                      in 
+--                                      map (\x -> )
+
+
+
+--                                         map (\((symbol1, symbol2), probability) -> ((symbol1, symbol2), divide probability total) ) (frequencies (get_trans corpus))
+
+total_number_of_items :: Ord a => Corpus a -> Int 
+total_number_of_items corpus = length corpus
+
+total_number_transitions :: [(a,a)] -> Int 
+total_number_transitions trans = length trans
+
+extract_starts :: Ord a => Corpus a -> [a]
+extract_starts corpus = (map (\x -> head x ) corpus) 
+
+extract_end :: Ord a => Corpus a -> [a]
+extract_end corpus = (map (\x -> last x ) corpus)
+
+get_trans :: Ord a => Corpus a -> [(a,a)]
+get_trans [] = []
+get_trans (x: rest) = bigrams x ++ get_trans rest
+
+trans_base :: Ord a => [((a, a), Int)] -> a -> Int 
+trans_base all_trans target = sum (map (\((q',p'), z') -> z') (filter (\((x, y), num_occ) -> (y == target)) all_trans))
+                              
+trans_calc :: Ord a => [((a, a), Int)] -> a -> Int -> [((a, a), Double)] 
+trans_calc [] target total = []
+trans_calc (((x, xs), chance) : rest) target total = case (xs == target) of True -> ((x, xs), (divide chance total)) : trans_calc rest target total
+                                                                            False -> trans_calc rest target total
+
+
+allStates :: Ord a => Corpus a -> [a]
+allStates [] = []
+allStates ((x_head: []) : rest) = nub (x_head : allStates rest)  
+allStates ((x_head: x_tail) : rest) = nub (x_head : (allStates (x_tail : rest)))  
+
+
+
+-- map bigrams function and concatenate result (look @ concatmap)
+
+-- (x, xs) = tuple w/ 2 elements 
+-- (x: xs) = list w/ x = head, xs as tail 
+-- square brackets => only for list 
+-- () for tuples/grouping 
 -- A potentially helpful starting point:
 -- buildProbSLG corpus = ProbSLG ([], [], [])
+
 
 -------------------------------------------------------------------------------
 -- Problem 3:
@@ -78,8 +140,8 @@ sanitize = []
 posProbSLG :: Corpus TaggedWord -> ProbSLG String
 posProbSLG = undefined
 
-tag :: ProbSLG String -> String -> [(Sentence TaggedWord, Double)]
+tag :: Corpus TaggedWord -> String -> [(Sentence TaggedWord, Double)]
 tag = undefined
 
-tagBest :: ProbSLG String -> String -> Sentence TaggedWord
+tagBest :: Corpus TaggedWord -> String -> Sentence TaggedWord
 tagBest = undefined

@@ -6,7 +6,7 @@ module ProbSLG ( ProbSLG(..)
 
 -- For pretty-printing PSLGs.
 import Data.List (transpose)
--- import Text.PrettyPrint.Boxes
+import PrettyPrint.Boxes
 
 -------------------------------------------------------------------------------
 -- Probabilistic SLGs.
@@ -18,14 +18,14 @@ newtype ProbSLG sy = ProbSLG ( [(sy, Double)]      -- Starting symbols.
                              )
 
 -- Pretty-printing function.
---instance Show a => Show (ProbSLG a) where
---    show (ProbSLG (starts, finals, trans)) =
---           "===== Starting symbols: ===\n"
---       ++ makeTable (map (\(x, y) -> [show x, show y]) starts)
---        ++ "\n===== Final symbols: ======\n"
---        ++ makeTable (map (\(x, y) -> [show x, show y]) finals)
---       ++ "\n===== Transitions: ========\n"
---        ++ makeTable (map (\(x, y, z) -> [show x, show y, show z]) trans)
+instance Show a => Show (ProbSLG a) where
+    show (ProbSLG (starts, finals, trans)) =
+           "===== Starting symbols: ===\n"
+        ++ makeTable (map (\(x, y) -> [show x, show y]) starts)
+        ++ "\n===== Final symbols: ======\n"
+        ++ makeTable (map (\(x, y) -> [show x, show y]) finals)
+        ++ "\n===== Transitions: ========\n"
+        ++ makeTable (map (\(x, y, z) -> [show x, show y, show z]) trans)
 
 -------------------------------------------------------------------------------
 -- Corpora.
@@ -46,6 +46,6 @@ newtype TaggedWord = TaggedWord (String, String)
 -------------------------------------------------------------------------------
 
 -- Turns a list of lists of strings into a pretty table.
---makeTable :: [[String]] -> String
---makeTable rows =
---    render $ hsep 2 left (map (vcat left . map text) (transpose rows))
+makeTable :: [[String]] -> String
+makeTable rows =
+    render $ hsep 2 left (map (vcat left . map text) (transpose rows))

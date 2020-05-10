@@ -1,11 +1,7 @@
 module Checker ( checkPOS
-               , checkPOSFull
                , checkTag
-               , checkTagFull
                , checkTagBest
-               , checkTagBestFull
                , checkAccuracy
-               , checkAccuracyFull
                , accuracy
                )
                where
@@ -17,6 +13,9 @@ import qualified Data.Text.IO as TIO (readFile)
 
 -- For parsing the file into pieces.
 import qualified Data.List.Split as Split (endBy)
+
+-- For list processing.
+import Data.List (foldl', foldl1')
 
 -- For dealing with weird Brown non-tags.
 import qualified Data.Maybe as Maybe (mapMaybe)
@@ -35,9 +34,6 @@ import Midterm ( buildProbSLG
 -- File paths for Brown corpus.
 -------------------------------------------------------------------------------
 
-brownFull :: FilePath
-brownFull = "brown/"
-
 brownSmall :: FilePath
 brownSmall = "brown-small/"
 
@@ -46,7 +42,6 @@ brownSmall = "brown-small/"
 -------------------------------------------------------------------------------
 
 checkPOS = checkPOS' brownSmall
-checkPOSFull = checkPOS' brownFull
 
 checkPOS' :: FilePath -> IO (ProbSLG String)
 checkPOS' path =
@@ -57,25 +52,22 @@ checkPOS' path =
 -------------------------------------------------------------------------------
 
 checkTag = checkTag' brownSmall
-checkTagFull = checkTag' brownFull
 
 checkTag' :: FilePath -> String -> IO [(Sentence TaggedWord, Double)]
 checkTag' path sentence =
-    (tag <$> posProbSLG <$> loadParsedCorpus path) <*> pure sentence
+    (tag <$> loadParsedCorpus path) <*> pure sentence
 
 checkTagBest = checkTagBest' brownSmall
-checkTagBestFull = checkTagBest' brownFull
 
 checkTagBest' :: FilePath -> String -> IO (Sentence TaggedWord)
 checkTagBest' path sentence =
-    (tagBest <$> posProbSLG <$> loadParsedCorpus path) <*> pure sentence
+    (tagBest <$> loadParsedCorpus path) <*> pure sentence
 
 -------------------------------------------------------------------------------
 -- Compute overall accuracy against corpora.
 -------------------------------------------------------------------------------
 
 checkAccuracy = checkAccuracy' brownSmall
-checkAccuracyFull = checkAccuracy' brownFull
 
 checkAccuracy' :: FilePath -> IO Double
 checkAccuracy' path =
@@ -83,22 +75,26 @@ checkAccuracy' path =
 
 accuracy :: Corpus TaggedWord -> Double
 accuracy unsanitizedCorpus =
-    divide (length $ filter check pairs) -- Number of correct sentences.
-           (length $ concat corpus)      -- Number of total sentences.
+    let (correct, total) = foldl' checkSentence (0, 0) corpus
+    in  divide correct total
   where
+    -- Shorten corpus sentences (for faster performance).
+    shorter = map (take 5) unsanitizedCorpus
     -- Run corpus sentences through sanitization.
-    corpus = foldl (\a b -> map b a) unsanitizedCorpus sanitize
-    -- Generate PSLG.
-    g = posProbSLG corpus
-    -- Strip the corpus of all tags.
-    unparsedCorpus = map getWord <$> corpus
-    -- Run the corpus through the tagger.
-    taggedCorpus = map (tagBest g . unwords) unparsedCorpus
-    -- Pair up parsed and unparsed sentences.
-    pairs = zip (concat corpus) (concat taggedCorpus)
-    -- Function for checking how the PSLG fares for a sentence.
-    check (parsed, unparsed) = parsed == unparsed
-    --check (parsed, unparsed) = parsed == (tagBest g (unwords unparsed))
+    corpus = foldl' (\a b -> map b a) shorter sanitize
+    -- Faster tagging.
+    tB str = fst $ foldl1' (\x y -> if snd x >= snd y then x else y)
+                           (tag corpus str)
+    -- Check single sentence.
+    checkSentence (correct, total) original =
+        foldl' checkPair (correct, total) (zip original tagged)
+      where
+        tagged = tB . unwords $ map getWord original
+    -- Check single pair.
+    checkPair (correct, total) (parsed, unparsed) =
+        if   parsed == unparsed
+        then (correct+1, total+1)
+        else (correct, total+1)
 
 -------------------------------------------------------------------------------
 -- Load corpus files.

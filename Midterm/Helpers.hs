@@ -1,7 +1,9 @@
 module Helpers where
 
 -- For efficient list parsing.
-import Data.List (group, sort)
+import Data.List (group, sort, sortBy, groupBy)
+import Data.Function (on)
+import Data.Ord (comparing)
 
 -- For defining easy-to-work-with examples.
 import ProbSLG
@@ -29,6 +31,35 @@ getTag (TaggedWord (_, tag)) = tag
 -- Gets just the word out of a tagged-word pair.
 getWord :: TaggedWord -> String
 getWord (TaggedWord (word, _)) = word
+
+-- Update the tag of a tagged-word pair.
+changeTag :: TaggedWord -> String -> TaggedWord
+changeTag (TaggedWord (word, _)) tag = TaggedWord (word, tag)
+
+-------------------------------------------------------------------------------
+-- Simple frequency grammar.
+--
+-- Usage with "lookup":
+-- case lookup "the" (mostFrequent corpus3) of
+--     Just tag -> tag
+--     Nothing  -> ""
+-------------------------------------------------------------------------------
+
+mostFrequent :: Corpus TaggedWord -> [(String, String)]
+mostFrequent corpus =
+    map go chunked
+  where
+    -- Gather all words and convert to plain tuples.
+    allWords = map (\(TaggedWord p) -> p) $ concat corpus
+    -- Group words and tags.
+    chunked = groupBy ((==) `on` fst) $ sortBy (comparing fst) allWords
+    -- Calculate most frequent tag.
+    go xs =
+        ( fst $ head xs
+        , fst $ foldl1 (\x y -> if snd x >= snd y then x else y)
+              $ frequencies
+              $ map snd xs
+        )
 
 -------------------------------------------------------------------------------
 -- Easy-to-work-with corpora.
@@ -102,6 +133,20 @@ corpus4 =
     , [TaggedWord ("the", "B"), TaggedWord ("the", "B")]
     , [TaggedWord ("the", "B"), TaggedWord ("the", "B")]
     , [TaggedWord ("the", "B"), TaggedWord ("the", "B")]
+    ]
+
+corpus5 :: Corpus TaggedWord
+corpus5 =
+    [ [TaggedWord ("the", "A"), TaggedWord ("the", "A")]
+    , [TaggedWord ("the", "A"), TaggedWord ("the", "A")]
+    , [TaggedWord ("the", "A"), TaggedWord ("the", "A")]
+    , [TaggedWord ("cat", "A"), TaggedWord ("cat", "A")]
+    , [TaggedWord ("cat", "A"), TaggedWord ("cat", "A")]
+    , [TaggedWord ("the", "B"), TaggedWord ("the", "B")]
+    , [TaggedWord ("the", "B"), TaggedWord ("the", "B")]
+    , [TaggedWord ("cat", "B"), TaggedWord ("cat", "B")]
+    , [TaggedWord ("cat", "B"), TaggedWord ("cat", "B")]
+    , [TaggedWord ("cat", "B"), TaggedWord ("cat", "B")]
     ]
 
 -------------------------------------------------------------------------------

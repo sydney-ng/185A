@@ -63,7 +63,7 @@ helper ((answer, chance): rest) target = case (answer == target) of True -> chan
 -------------------------------------------------------------------------------
 
 buildProbSLG :: Ord a => Corpus a -> ProbSLG a
-buildProbSLG corpus = ProbSLG ((calculate_start_probability corpus), (calculate_end_probability corpus), [])
+buildProbSLG corpus = ProbSLG ((calculate_start_probability corpus), (calculate_end_probability corpus), (format_trans_pairs (calculate_trans_probability corpus)))
 
 calculate_start_probability :: Ord a => Corpus a -> [(a, Double)] 
 calculate_start_probability corpus = let frequency_pairs = frequencies (extract_starts corpus) 
@@ -77,14 +77,18 @@ calculate_end_probability corpus = let frequency_pairs = frequencies (extract_en
                                      in 
                                          map (\(symbol, probability) -> (symbol, divide probability total) ) frequency_pairs
 
---calculate_trans_probability :: Ord a => Corpus a -> [((a, a), Double)]
---calculate_trans_probability corpus = let frequency_pairs = frequencies (get_trans corpus)
---                                      in 
---                                      map (\x -> )
+calculate_trans_probability :: Ord a => Corpus a -> [[((a, a), Double)]]
+calculate_trans_probability corpus = let frequency_pairs = frequencies (get_trans corpus)
+                                         all_states = allStates (corpus)
+                                         in 
+                                         map (\x -> trans_parent_fx frequency_pairs x) all_states
 
+flatten_trans_pairs :: [[((a, a), Double)]] -> [((a, a), Double)]
+flatten_trans_pairs corpus = concat corpus 
 
-
---                                         map (\((symbol1, symbol2), probability) -> ((symbol1, symbol2), divide probability total) ) (frequencies (get_trans corpus))
+format_trans_pairs :: [[((a, a), Double)]] -> [(a, a, Double)]
+format_trans_pairs trans_pairs = map (\((sym1, sym2), chance) -> (sym2, sym1, chance)) (flatten_trans_pairs trans_pairs)
+ 
 
 total_number_of_items :: Ord a => Corpus a -> Int 
 total_number_of_items corpus = length corpus
@@ -116,6 +120,14 @@ allStates [] = []
 allStates ((x_head: []) : rest) = nub (x_head : allStates rest)  
 allStates ((x_head: x_tail) : rest) = nub (x_head : (allStates (x_tail : rest)))  
 
+--trans_parent_fx_RECURSION :: Ord a => [a] -> [((a, a), Int)] -> [((a, a), Double)]
+--trans_parent_fx_RECURSION [] frequency_pairs = []
+--trans_parent_fx_RECURSION (x: xs) frequency_pairs = (trans_parent_fx frequency_pairs x) :  (trans_parent_fx_RECURSION xs frequency_pairs ) 
+
+
+trans_parent_fx :: Ord a => [((a, a), Int)] -> a ->  [((a, a), Double)]
+trans_parent_fx t_freqs symbol = let trans_total = trans_base t_freqs symbol 
+                                 in trans_calc t_freqs symbol trans_total
 
 
 -- map bigrams function and concatenate result (look @ concatmap)

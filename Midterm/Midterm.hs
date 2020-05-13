@@ -63,7 +63,7 @@ helper ((answer, chance): rest) target = case (answer == target) of True -> chan
 -------------------------------------------------------------------------------
 
 buildProbSLG :: Ord a => Corpus a -> ProbSLG a
-buildProbSLG corpus = ProbSLG ((calculate_start_probability corpus), (calculate_end_probability corpus), [])--(format_trans_pairs (calculate_trans_probability corpus)))
+buildProbSLG corpus = ProbSLG ((calculate_start_probability corpus), (calculate_end_probability corpus), (calculate_trans_probability corpus))
 
 calculate_start_probability :: Ord a => Corpus a -> [(a, Double)] 
 calculate_start_probability corpus = let frequency_pairs = frequencies (extract_starts corpus) 
@@ -95,19 +95,10 @@ buildProbSLG_count_numerator all_trans target1 target2 = length (filter (\(x, y)
 
 buildProbSLG_count_base :: Ord a => [(a, a)] -> a -> Int 
 buildProbSLG_count_base all_trans target = length (filter (\(x, y) -> (x == target)) all_trans)
-
-flatten_trans_pairs :: [[((a, a), Double)]] -> [((a, a), Double)]
-flatten_trans_pairs corpus = concat corpus 
-
-format_trans_pairs :: [[((a, a), Double)]] -> [(a, a, Double)]
-format_trans_pairs trans_pairs = map (\((sym1, sym2), chance) -> (sym2, sym1, chance)) (flatten_trans_pairs trans_pairs)
  
 
 total_number_of_items :: Ord a => Corpus a -> Int 
 total_number_of_items corpus = length corpus
-
-total_number_transitions :: [(a,a)] -> Int 
-total_number_transitions trans = length trans
 
 extract_starts :: Ord a => Corpus a -> [a]
 extract_starts corpus = (map (\x -> head x ) corpus) 
@@ -121,21 +112,12 @@ get_trans (x: rest) = bigrams x ++ get_trans rest
 
 trans_base :: Ord a => [((a, a), Int)] -> a -> Int 
 trans_base all_trans target = sum (map (\((q',p'), z') -> z') (filter (\((x, y), num_occ) -> (y == target)) all_trans))
-                              
-trans_calc :: Ord a => [((a, a), Int)] -> a -> Int -> [((a, a), Double)] 
-trans_calc [] target total = []
-trans_calc (((x, xs), chance) : rest) target total = case (xs == target) of True -> ((x, xs), (divide chance total)) : trans_calc rest target total
-                                                                            False -> trans_calc rest target total
-
+                            
 allStates :: Ord a => Corpus a -> [a]
 allStates [] = []
 allStates ((x_head: []) : rest) = nub (x_head : allStates rest)  
 allStates ((x_head: x_tail) : rest) = nub (x_head : (allStates (x_tail : rest)))  
 
-
-trans_parent_fx :: Ord a => [((a, a), Int)] -> a ->  [((a, a), Double)]
-trans_parent_fx t_freqs symbol = let trans_total = trans_base t_freqs symbol 
-                                 in trans_calc t_freqs symbol trans_total
 
 -------------------------------------------------------------------------------
 -- Problem 3:

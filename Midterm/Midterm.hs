@@ -131,7 +131,6 @@ trans_parent_fx t_freqs symbol = let trans_total = trans_base t_freqs symbol
 
 
 -- map bigrams function and concatenate result (look @ concatmap)
-
 -- (x, xs) = tuple w/ 2 elements 
 -- (x: xs) = list w/ x = head, xs as tail 
 -- square brackets => only for list 
@@ -150,10 +149,51 @@ sanitize :: [Sentence TaggedWord -> Sentence TaggedWord]
 sanitize = []
 
 posProbSLG :: Corpus TaggedWord -> ProbSLG String
-posProbSLG = undefined
+posProbSLG corpus = ProbSLG ((posProbSLG_starts corpus), (posProbSLG_finish corpus), [])
 
-tag :: Corpus TaggedWord -> String -> [(Sentence TaggedWord, Double)]
-tag = undefined
+posProbSLG_starts :: Corpus TaggedWord ->  [(String, Double)] 
+posProbSLG_starts corpus =  map (\(TaggedWord (sym1, sym2), chance) -> (sym2, chance)) (calculate_start_probability corpus) 
+
+posProbSLG_finish :: Corpus TaggedWord ->  [(String, Double)] 
+posProbSLG_finish corpus =  map (\(TaggedWord (sym1, sym2), chance) -> (sym2, chance)) (calculate_end_probability corpus) 
+
+get_possProbSLG_trans :: Corpus TaggedWord -> [(String, String)]
+get_possProbSLG_trans corpus = map (\(TaggedWord (sym1, sym2), TaggedWord (sym3, sym4)) -> (sym2, sym4)) (get_trans corpus) 
+
+
+--calculate_trans_probability2 :: Corpus TaggedWord -> [[((a, a), Double)]]
+--calculate_trans_probability2 corpus = let frequency_pairs = frequencies (get_possProbSLG_trans corpus)
+--                                          all_states = posProbSLG_allStates (corpus)
+--                                         in 
+--                                         map (\x -> trans_parent_fx frequency_pairs x) all_states
+
+posProbSLG_allStates_helper :: Corpus TaggedWord -> [TaggedWord]
+posProbSLG_allStates_helper [] = []
+posProbSLG_allStates_helper ((x_head: []) : rest) = nub (x_head : allStates rest)  
+posProbSLG_allStates_helper ((x_head: x_tail) : rest) = nub (x_head : (allStates (x_tail : rest)))  
+
+posProbSLG_allStates :: Corpus TaggedWord -> [String]
+posProbSLG_allStates l =  map (\(TaggedWord (sym1, sym2)) -> sym2) (posProbSLG_allStates_helper l)
+
+
+posProbSLG_trans_base :: [((String, String), Int)] -> String -> Int 
+posProbSLG_trans_base all_trans target = sum (map (\((q',p'), z') -> z') (filter (\((x, y), num_occ) -> (y == target)) all_trans))
+
+posProbSLG_trans_calc :: [((String, String), Int)] -> String -> Int -> [((String, String), Double)] 
+posProbSLG_trans_calc [] target total = []
+posProbSLG_trans_calc (((x, xs), chance) : rest) target total = case (xs == target) of True -> ((x, xs), (divide chance total)) : posProbSLG_trans_calc rest target total
+                                                                                       False -> posProbSLG_trans_calc rest target total
+
+  
+--trans_parent_fx :: [((String, String), Int)] -> String ->  [((String, String), Double)]
+--trans_parent_fx t_freqs symbol = let trans_total = trans_base t_freqs symbol 
+--                                 in trans_calc t_freqs symbol trans_total
+
+--posProbSLG_trans ::  Corpus TaggedWord -> [(String, String, Double)]
+--posProbSLG_trans corpus =  map (\(TaggedWord (sym1, sym2), TaggedWord (sym3, sym4), chance) -> (sym2, sym4, chance)) (format_trans_pairs_posProbSLG (calculate_trans_probability corpus))
 
 tagBest :: Corpus TaggedWord -> String -> Sentence TaggedWord
 tagBest = undefined
+
+-- tag takes corpus + string and determine the prob of generating that string 
+-- 

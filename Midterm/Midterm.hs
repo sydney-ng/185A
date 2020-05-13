@@ -120,7 +120,7 @@ allStates ((x_head: x_tail) : rest) = nub (x_head : (allStates (x_tail : rest)))
 
 
 -------------------------------------------------------------------------------
--- Problem 3:
+-- Problem 3: posProbSLG
 -------------------------------------------------------------------------------
 
 -- Add your sanitization functions to this list. Note that each function must
@@ -173,6 +173,30 @@ all_trans_possProbSLG corpus =  map (\(TaggedWord (sym1, sym2), TaggedWord (sym3
 nub_all_trans_possProbSLG :: Corpus TaggedWord -> [(String, String)]
 nub_all_trans_possProbSLG corpus =  nub $ map (\(TaggedWord (sym1, sym2), TaggedWord (sym3, sym4)) -> (sym2, sym4)) (get_trans_possProbSLG_helper corpus)
 
+
+-------------------------------------------------------------------------------
+-- Problem 3: tag
+-------------------------------------------------------------------------------
+-- idea 
+--  1. split the string into a list get the length 
+--  2. find all transitions in corpus with at least that length 
+--      - extract the first n transitions 
+--      - assign each word to the first part of tagged word 
+--      - do calculation for final output 
+
+tag :: Corpus TaggedWord -> String -> [(Sentence TaggedWord, Double)]
+tag = undefined 
+
+split_string:: String -> [(String)]
+split_string str = words str
+
+string_length:: [(String)] -> Int 
+string_length str_list = length str_list
+
+find_trans_with_min_len :: Corpus TaggedWord -> Int -> [[(TaggedWord)]]
+find_trans_with_min_len [] str_len = []
+find_trans_with_min_len (x: xs) str_len  =  case ((length x) < str_len) of True -> find_trans_with_min_len xs str_len
+                                                                           False -> x: find_trans_with_min_len xs str_len
 tagBest :: Corpus TaggedWord -> String -> Sentence TaggedWord
 tagBest = undefined
 

@@ -210,6 +210,15 @@ string_length str_list = length str_list
 --                 in 
 --                 format_tag corpus corpus_poss_SLG word_list str_len 
 
+-- run with: up_to_x_tuples [[TaggedWord ("the","D"),TaggedWord ("fat","Adj"),TaggedWord ("cat","N")],[TaggedWord ("the","D"),TaggedWord ("very","Adv"),TaggedWord ("fat","Adj"),TaggedWord ("cat","N")],[TaggedWord ("the","D"),TaggedWord ("very","Adv"),TaggedWord ("very","Adv"),TaggedWord ("fat","Adj"),TaggedWord ("cat","N")]] 3  
+-- gives you only first 3 tagged word transitions 
+up_to_x_tuples :: [[(TaggedWord)]] -> Int -> [[(TaggedWord)]]
+up_to_x_tuples [] limit = []
+up_to_x_tuples (x: xs) limit = up_to_x_tuples_HELPER x limit : up_to_x_tuples xs limit
+
+up_to_x_tuples_HELPER :: [(TaggedWord)] -> Int -> [(TaggedWord)]
+up_to_x_tuples_HELPER _ 0 = []
+up_to_x_tuples_HELPER (x: xs) limit = x : up_to_x_tuples_HELPER xs (subtract 1 limit)
 
 
 map_outcome_to_answer :: [[(TaggedWord)]] -> [Double] -> [([TaggedWord], Double)]

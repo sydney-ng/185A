@@ -219,7 +219,7 @@ tag corpus str = let word_list = words str
                      generate_tag corpus word_list word_length 
 
 generate_tag :: Corpus TaggedWord -> [String] -> Int ->[(Sentence TaggedWord, Double)]
-generate_tag corpus word_list word_length = let tuples = up_to_x_tuples (nub_find_trans_with_min_len corpus word_length) word_length
+generate_tag corpus word_list word_length = let tuples = format_x_tuples (up_to_x_tuples (nub_find_trans_with_min_len corpus word_length) word_length) word_list
                                                 chances = prboutcome corpus (get_possProbSLG_trans corpus) word_list word_length
                                             in 
                                                 map_outcome_to_answer tuples chances 

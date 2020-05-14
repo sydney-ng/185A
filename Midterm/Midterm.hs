@@ -184,14 +184,99 @@ nub_all_trans_possProbSLG corpus =  nub $ map (\(TaggedWord (sym1, sym2), Tagged
 --      - assign each word to the first part of tagged word 
 --      - do calculation for final output 
 
-tag :: Corpus TaggedWord -> String -> [(Sentence TaggedWord, Double)]
-tag = undefined 
+--tag :: Corpus TaggedWord -> String -> [(Sentence TaggedWord, Double)]
+--tag corpus str = let word_list = words str 
+--                     corpus_poss_SLG = get_possProbSLG_trans corpus
+--                     str_len = length str                         
+--                 in 
+--                     tagging_helper word_list corpus_poss_SLG str_len
+
+
+-- tagging_helper :: [(String)] -> [(String, String, Double)] -> Int -> 
+-- tagging_helper word_list trans_pair_probs str_len = let poss_transitions = nub_find_trans_with_min_len corpus str_len
+--                                                     in 
+--                                                                    
 
 split_string:: String -> [(String)]
 split_string str = words str
 
 string_length:: [(String)] -> Int 
 string_length str_list = length str_list
+
+--tag :: Corpus TaggedWord -> String -> [[(TaggedWord)]] --[(Sentence TaggedWord, Double)]
+--tag corpus str = let word_list = words str 
+--                     corpus_poss_SLG = get_possProbSLG_trans corpus
+--                     str_len = length str 
+--                 in 
+--                 format_tag corpus corpus_poss_SLG word_list str_len 
+
+-- run with: format_tag corpus3 (get_possProbSLG_trans corpus3) ["the", "fat", "cat"] 3 
+-- answer_without_doubles = [[TaggedWord ("the","D"),TaggedWord ("fat","Adj"),TaggedWord ("cat","N")],[TaggedWord ("the","D"),TaggedWord ("very","Adv"),TaggedWord ("fat","Adj"),TaggedWord ("cat","N")],[TaggedWord ("the","D"),TaggedWord ("very","Adv"),TaggedWord ("very","Adv"),TaggedWord ("fat","Adj"),TaggedWord ("cat","N")]] 
+-- possible_corpus_transitions = [["D","Adj","N"],["D","Adv","Adj"],["D","Adv","Adv"]] 
+-- format_tag returns [0.125,0.2,5.0e-2] 
+format_tag :: Corpus TaggedWord -> [(String, String, Double)] -> [String] -> Int -> [Double] 
+format_tag corpus corpus_poss_SLG word_list str_len = let answer_without_doubles = nub_find_trans_with_min_len corpus str_len
+                                                          possible_corpus_transitions = up_to_x_trans (pos_list (nub_find_trans_with_min_len corpus str_len)) str_len
+                                                          in 
+                                                          map (\x -> format_tag_with_bigrams x corpus_poss_SLG) possible_corpus_transitions
+
+format_tag_with_bigrams ::[String] -> [(String, String, Double)] -> Double 
+format_tag_with_bigrams possible_corpus_transition corpus_poss_SLG = get_sequence_probability possible_corpus_transition corpus_poss_SLG
+
+-- up_to_x_trans: [ ,["D","Adv","Adj"],["D","Adv","Adv"]]
+
+--parent_extract_transitions :: Corpus TaggedWord-> Int -> [[String]]
+--parent_extract_transitions corpus target_len = let filtered_trans_poss = up_to_x_trans (pos_list (nub_find_trans_with_min_len corpus target_len)) target_len
+--                                                   
+--                                             in map (\x -> extraction_layer_1 x corpus_poss_SLG) filtered_trans_poss
+
+--extraction_layer_1 :: [[String]] -> [(String, String, Double)] -> [([String], Double)]
+--extraction_layer_1 [] corpus_poss_SLG = []
+--extraction_layer_1 (x: xs) corpus_poss_SLG = let probability = get_sequence_probability x corpus_poss_SLG 
+--                                             in 
+
+--format_tuple :: [TaggedWord] -> Double -> ([TaggedWord], Double)
+--format_tuple tuple chance = map (\x -> ([x], chance)) tuple
+
+-- ex:  get_sequence_probability ["D","Adj","N"]  (get_possProbSLG_trans corpus3)
+get_sequence_probability :: [String] -> [(String, String, Double)] -> Double
+get_sequence_probability transitions corpus_poss_SLG = let trans_bigrams = bigrams transitions 
+                                                          in 
+                                                           multiply_sequentially (do_transition_calculations corpus_poss_SLG trans_bigrams)
+
+
+pos_list :: [[(TaggedWord)]] -> [[String]]
+pos_list [] = []
+pos_list (x:xs) = extract_transitions_helper x : pos_list xs
+
+-- ex: up_to_x_trans (pos_list (nub_find_trans_with_min_len corpus3 3)) 3
+-- returns [["D","Adj","N"],["D","Adv","Adj"],["D","Adv","Adv"]]
+up_to_x_trans :: [[String]] -> Int -> [[String]]
+up_to_x_trans [] limit = []
+up_to_x_trans (x: xs) limit = up_to_x_trans_HELPER x limit : up_to_x_trans xs limit
+
+up_to_x_trans_HELPER :: [String] -> Int -> [String]
+up_to_x_trans_HELPER trans 0 = []
+up_to_x_trans_HELPER (x: xs) limit = x : up_to_x_trans_HELPER xs (subtract 1 limit)
+
+
+do_transition_calculations :: [(String, String, Double)] -> [(String,String)] -> [[Double]]
+do_transition_calculations corpus_trans [] = []
+do_transition_calculations corpus_trans (x: xs) = find_probability_in_corpus corpus_trans x : do_transition_calculations corpus_trans xs
+
+multiply_sequentially :: [[Double]] -> Double 
+multiply_sequentially [] = 1 
+multiply_sequentially ([x]: xs) = x * (multiply_sequentially xs)
+
+find_probability_in_corpus :: [(String, String, Double)] -> (String,String) -> [Double]
+find_probability_in_corpus corpus_trans (s1, s2) = map (\(x',y',z') -> z') (filter (\(x, y, z) -> ((x == s1 ) && (y == s2))) corpus_trans)
+
+extract_transitions_helper :: [(TaggedWord)] -> [(String)]
+extract_transitions_helper [] = []
+extract_transitions_helper c_line = map (\(TaggedWord (sym1, sym2)) -> sym2) c_line
+
+nub_find_trans_with_min_len :: Corpus TaggedWord -> Int -> [[(TaggedWord)]] 
+nub_find_trans_with_min_len corpus str_len = nub $ find_trans_with_min_len corpus str_len
 
 find_trans_with_min_len :: Corpus TaggedWord -> Int -> [[(TaggedWord)]]
 find_trans_with_min_len [] str_len = []

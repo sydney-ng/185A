@@ -210,18 +210,26 @@ string_length str_list = length str_list
 --                 in 
 --                 format_tag corpus corpus_poss_SLG word_list str_len 
 
--- run with: format_tag corpus3 (get_possProbSLG_trans corpus3) ["the", "fat", "cat"] 3 
--- answer_without_doubles = [[TaggedWord ("the","D"),TaggedWord ("fat","Adj"),TaggedWord ("cat","N")],[TaggedWord ("the","D"),TaggedWord ("very","Adv"),TaggedWord ("fat","Adj"),TaggedWord ("cat","N")],[TaggedWord ("the","D"),TaggedWord ("very","Adv"),TaggedWord ("very","Adv"),TaggedWord ("fat","Adj"),TaggedWord ("cat","N")]] 
--- possible_corpus_transitions = [["D","Adj","N"],["D","Adv","Adj"],["D","Adv","Adv"]] 
--- format_tag returns [0.125,0.2,5.0e-2] 
-format_tag :: Corpus TaggedWord -> [(String, String, Double)] -> [String] -> Int -> [Double] 
-format_tag corpus corpus_poss_SLG word_list str_len = let answer_without_doubles = nub_find_trans_with_min_len corpus str_len
+
+
+map_outcome_to_answer :: [[(TaggedWord)]] -> [Double] -> [([TaggedWord], Double)]
+map_outcome_to_answer [] _ = []
+map_outcome_to_answer _ [] = []
+map_outcome_to_answer (x: xs) (y:ys)= (x, y) : (map_outcome_to_answer xs ys)
+
+prboutcome :: Corpus TaggedWord -> [(String, String, Double)] -> [String] -> Int -> [Double] 
+prboutcome corpus corpus_poss_SLG word_list str_len = let answer_without_doubles = nub_find_trans_with_min_len corpus str_len
                                                           possible_corpus_transitions = up_to_x_trans (pos_list (nub_find_trans_with_min_len corpus str_len)) str_len
                                                           in 
-                                                          map (\x -> format_tag_with_bigrams x corpus_poss_SLG) possible_corpus_transitions
+                                                          map (\x -> answer_possible_outcome x corpus_poss_SLG) possible_corpus_transitions
 
-format_tag_with_bigrams ::[String] -> [(String, String, Double)] -> Double 
-format_tag_with_bigrams possible_corpus_transition corpus_poss_SLG = get_sequence_probability possible_corpus_transition corpus_poss_SLG
+
+-- run with: prboutcome corpus3 (get_possProbSLG_trans corpus3) ["the", "fat", "cat"] 3 
+-- answer_without_doubles = [[TaggedWord ("the","D"),TaggedWord ("fat","Adj"),TaggedWord ("cat","N")],[TaggedWord ("the","D"),TaggedWord ("very","Adv"),TaggedWord ("fat","Adj"),TaggedWord ("cat","N")],[TaggedWord ("the","D"),TaggedWord ("very","Adv"),TaggedWord ("very","Adv"),TaggedWord ("fat","Adj"),TaggedWord ("cat","N")]] 
+-- possible_corpus_transitions = [["D","Adj","N"],["D","Adv","Adj"],["D","Adv","Adv"]] 
+-- prboutcome returns [0.125,0.2,5.0e-2] 
+answer_possible_outcome ::[String] -> [(String, String, Double)] -> Double 
+answer_possible_outcome possible_corpus_transition corpus_poss_SLG = get_sequence_probability possible_corpus_transition corpus_poss_SLG
 
 -- up_to_x_trans: [ ,["D","Adv","Adj"],["D","Adv","Adv"]]
 

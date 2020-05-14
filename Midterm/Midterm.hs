@@ -203,17 +203,18 @@ split_string str = words str
 string_length:: [(String)] -> Int 
 string_length str_list = length str_list
 
-tag :: Corpus TaggedWord -> String -> [([TaggedWord], Double)]
+tag :: Corpus TaggedWord -> String -> [(Sentence TaggedWord, Double)]
 tag corpus str = let word_list = words str 
                      word_length = length word_list 
                  in 
                  generate_tag corpus word_list word_length 
 
-generate_tag :: Corpus TaggedWord -> [String] -> Int -> [([TaggedWord], Double)]
+generate_tag :: Corpus TaggedWord -> [String] -> Int ->[(Sentence TaggedWord, Double)]
 generate_tag corpus word_list word_length = let tuples = up_to_x_tuples (nub_find_trans_with_min_len corpus word_length) word_length
                                                 chances = prboutcome corpus (get_possProbSLG_trans corpus) word_list word_length
                                             in 
                                                 map_outcome_to_answer tuples chances 
+
 -- we will have 2 parts, prb outcome and up_to_x_tuples (nub_find_trans_with_min_len corpus str_len) str_len
 
 -- run with: up_to_x_tuples [[TaggedWord ("the","D"),TaggedWord ("fat","Adj"),TaggedWord ("cat","N")],[TaggedWord ("the","D"),TaggedWord ("very","Adv"),TaggedWord ("fat","Adj"),TaggedWord ("cat","N")],[TaggedWord ("the","D"),TaggedWord ("very","Adv"),TaggedWord ("very","Adv"),TaggedWord ("fat","Adj"),TaggedWord ("cat","N")]] 3  

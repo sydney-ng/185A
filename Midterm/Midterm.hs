@@ -268,7 +268,6 @@ get_sequence_probability transitions corpus_poss_SLG = let trans_bigrams = bigra
                                                           in 
                                                            multiply_sequentially (do_transition_calculations corpus_poss_SLG trans_bigrams)
 
-
 pos_list :: [[(TaggedWord)]] -> [[String]]
 pos_list [] = []
 pos_list (x:xs) = extract_transitions_helper x : pos_list xs
@@ -306,8 +305,58 @@ find_trans_with_min_len :: Corpus TaggedWord -> Int -> [[(TaggedWord)]]
 find_trans_with_min_len [] str_len = []
 find_trans_with_min_len (x: xs) str_len  =  case ((length x) < str_len) of True -> find_trans_with_min_len xs str_len
                                                                            False -> x: find_trans_with_min_len xs str_len
-tagBest :: Corpus TaggedWord -> String -> Sentence TaggedWord
-tagBest = undefined
 
--- tag takes corpus + string and determine the prob of generating that string 
--- 
+-------------------------------------------------------------------------------
+-- Problem 3: tagBest
+-------------------------------------------------------------------------------
+tagBest :: Corpus TaggedWord -> String -> Sentence TaggedWord
+tagBest corpus string = tagHelper (tag corpus string)
+
+-- use: tagHelper (tag corpus3 "the fat cat")
+-- output: [TaggedWord ("the","D"),TaggedWord ("very","Adv"),TaggedWord ("fat","Adj")]
+tagHelper :: [(Sentence TaggedWord, Double)] -> Sentence TaggedWord 
+tagHelper tag_output = let all_probabilities = extract_probability tag_output
+                           max_probability = find_max all_probabilities
+                       in
+                           tagHelper2 all_probabilities max_probability tag_output
+
+-- tagHelper2 [0.125,0.2,5.0e-2] 0.2 
+--tagHelper2 :: [Double] -> Double -> [(Sentence TaggedWord, Double)] -> [(Sentence TaggedWord, Double)]
+--tagHelper2 all_probabilities max_probability tag_output = let max_tuple = find_max_tuple tag_output max_probability
+--                                                          in 
+--                                                          tag_output -- extract_answer (find_first max_tuple) 
+
+-- input: tagHelper2 [0.125,0.2,5.0e-2] 0.2 (tag corpus3 "the fat cat")
+-- output: [TaggedWord ("the","D"),TaggedWord ("very","Adv"),TaggedWord ("fat","Adj")]
+tagHelper2 ::  [Double] -> Double -> [(Sentence TaggedWord, Double)] -> Sentence TaggedWord
+tagHelper2 all_probabilities max_probability tag_output = extract_answer (find_first (find_max_tuple tag_output max_probability))
+                                                          -- tag_output -- extract_answer (find_first max_tuple) 
+
+-- use: extract_probability (tag corpus3 "the fat cat")
+-- output: [0.125,0.2,5.0e-2]
+extract_probability :: [(Sentence TaggedWord, Double)] -> [Double] 
+extract_probability [] = []
+extract_probability ((x,y) : rest) = y: extract_probability rest
+
+
+find_max :: [Double] -> Double 
+find_max from_list = maximum from_list
+
+
+-- use with: find_max_tuple (tag corpus3 "the fat cat") 0.2
+-- output: [([TaggedWord ("the","D"),TaggedWord ("very","Adv"),TaggedWord ("fat","Adj")],0.2)]
+find_max_tuple :: [(Sentence TaggedWord, Double)] -> Double -> [(Sentence TaggedWord, Double)]
+find_max_tuple answer_list target = filter (\(q,p) -> p == target) answer_list
+
+
+find_first :: [(Sentence TaggedWord, Double)] -> (Sentence TaggedWord, Double)
+find_first tuple_answer = head tuple_answer  
+
+extract_answer :: (Sentence TaggedWord, Double) -> Sentence TaggedWord
+extract_answer answer_w_double = case answer_w_double of (x, y) -> x 
+
+
+
+
+
+

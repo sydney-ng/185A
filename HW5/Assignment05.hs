@@ -68,8 +68,10 @@ unionFSAs_HELPER startA finals transitions = (EpsAutomaton (startA, finals, tran
 ------------------------------------------------------------------------------------------------------------------
 -- CONCAT FSA 
 ------------------------------------------------------------------------------------------------------------------
-concatFSAs :: (Ord sy) => EpsAutomaton Int sy -> EpsAutomaton Int sy
-                          -> EpsAutomaton Int sy
+concatFSAs :: (Ord sy) => 
+              EpsAutomaton Int sy -> 
+              EpsAutomaton Int sy ->
+              EpsAutomaton Int sy
 concatFSAs automaton fsaB = 
      let startA = get_starting_symbols automaton
          finalA = get_ending_symbols automaton
@@ -110,6 +112,31 @@ concat_format_trans new_fsaB startA finalA startB finalB transitionA transitionB
 -- STAR FSA 
 ------------------------------------------------------------------------------------------------------------------
 
+starFSA :: (Ord sy) => 
+           EpsAutomaton Int sy -> 
+           EpsAutomaton Int sy
+starFSA fsa =
+    let new_fsa = ensureUnused [0] fsa in 
+    starFSA_variable_finder new_fsa 
 
+starFSA_variable_finder :: (Ord sy) => 
+                           EpsAutomaton Int sy -> 
+                           EpsAutomaton Int sy 
+starFSA_variable_finder new_fsa =     
+    let starts = get_starting_symbols new_fsa
+        finals = get_ending_symbols new_fsa
+        transitions = get_transitions new_fsa in
+        starFSA_combiner starts finals transitions 
+
+starFSA_combiner ::  (Ord sy) => 
+                       Int -> -- start
+                       [Int] -> -- finals
+                       [(Int, Maybe sy, Int)] -> -- transitions 
+                       EpsAutomaton Int sy -- result 
+starFSA_combiner starts finals transitions = 
+     let e_transition_to_beg = concat_trans finals starts
+         start_trans = [(0, Nothing, starts)]
+     in
+     (EpsAutomaton (0, ([0]++finals), (format_transitions (format_transitions transitions e_transition_to_beg) start_trans) ))
 
 

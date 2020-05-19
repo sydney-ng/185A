@@ -100,17 +100,19 @@ pfsa2 = ProbFSA
     )
 
 -- Corresponds to (3) on the eFSA handout.
-efsa1 :: EpsAutomaton Int Char
-efsa1 = EpsAutomaton
-    ( 0
-    , [2]
-    , [ (0, Just 'a', 0)
-      , (0, Nothing, 1)
-      , (1, Just 'b', 1)
-      , (1, Nothing, 2)
-      , (2, Just 'c', 2)
-      ]
-     )
+efsa_1 :: EpsAutomaton Int Char
+efsa_1 = EpsAutomaton (10, [20,30], [(10, Just 'a', 10), (10, Nothing, 20),
+                        (10, Nothing, 30), (20, Just 'b', 21),
+                        (21, Just 'b', 20), (30, Just 'b', 31),
+                        (31, Just 'b', 32), (32, Just 'b', 30) ])
+
+
+efsa_2 :: EpsAutomaton Int Char
+efsa_2 = EpsAutomaton (0, [2], [(0, Just 'a', 0),
+                   (0, Nothing, 1),
+                   (1, Just 'b', 1),
+                   (1, Nothing, 2),
+                   (2, Just 'c', 2)])
 
 re1 :: RegEx Char
 re1 = Concat (Alt (Lit 'a') (Lit 'b')) (Lit 'c')

@@ -138,5 +138,16 @@ starFSA_combiner starts finals transitions =
          start_trans = [(0, Nothing, starts)]
      in
      (EpsAutomaton (0, ([0]++finals), (format_transitions (format_transitions transitions e_transition_to_beg) start_trans) ))
+------------------------------------------------------------------------------------------------------------------
+-- reToFSA
+------------------------------------------------------------------------------------------------------------------
+reToFSA :: (Ord sy) => 
+           RegEx sy -> 
+           EpsAutomaton Int sy
 
-
+reToFSA input = case input of (Lit x) -> (EpsAutomaton (0, [1], [(0, Just x, 1)]))
+                              (Alt r1 r2) -> unionFSAs (reToFSA r1) (reToFSA r2) 
+                              (Concat r1 r2) -> concatFSAs (reToFSA r1) (reToFSA r2) 
+                              (Star r)-> starFSA (reToFSA r) 
+                              Zero -> (EpsAutomaton (0, [], []))
+                              One -> (EpsAutomaton (0, [0], []))

@@ -2,6 +2,10 @@ module Assignment05 where
 
 import FSA
 
+------------------------------------------------------------------------------------------------------------------
+-- UNION FSA 
+------------------------------------------------------------------------------------------------------------------
+
 unionFSAs :: (Ord sy) => 
               EpsAutomaton Int sy -> 
               EpsAutomaton Int sy -> 
@@ -13,8 +17,6 @@ unionFSAs automaton fsaB =
         transitionA = get_transitions automaton
         newB_FSA = ensureUnused (allStatesEFSA automaton) fsaB in
         union_preparser newB_FSA startA finalA transitionA
-
---        unionFSAs_HELPER startA finalA startB finalB transitionA transitionB
 
 union_preparser :: (Ord sy) => 
                    EpsAutomaton Int sy -> --newB_FSA
@@ -63,7 +65,50 @@ unionFSAs_HELPER :: (Ord sy) =>
 unionFSAs_HELPER startA finals transitions = (EpsAutomaton (startA, finals, transitions))
 
 
+------------------------------------------------------------------------------------------------------------------
+-- CONCAT FSA 
+------------------------------------------------------------------------------------------------------------------
+concatFSAs :: (Ord sy) => EpsAutomaton Int sy -> EpsAutomaton Int sy
+                          -> EpsAutomaton Int sy
+concatFSAs automaton fsaB = 
+     let startA = get_starting_symbols automaton
+         finalA = get_ending_symbols automaton
+         transitionA = get_transitions automaton
+         newB_FSA = (ensureUnused (allStatesEFSA automaton) fsaB) in
+         concatFSAs_preparser newB_FSA startA finalA transitionA
 
+concatFSAs_preparser:: (Ord sy) => 
+                       EpsAutomaton Int sy -> --newB_FSA
+                       Int -> -- startA
+                       [Int] -> -- finalA
+                       [(Int, Maybe sy, Int)] -> -- transitionA 
+                       EpsAutomaton Int sy -- result 
+concatFSAs_preparser new_fsaB startA finalA transitionA = 
+    let startB = get_starting_symbols new_fsaB
+        finalB = get_ending_symbols new_fsaB
+        transitionB = get_transitions new_fsaB in
+        concat_format_trans new_fsaB startA finalA startB finalB transitionA transitionB
+
+concat_trans :: [Int] -> Int -> [(Int, Maybe sy, Int)]
+concat_trans trans start = case trans of (x:xs) -> ((x, Nothing, start):(concat_trans xs start))
+                                         _ -> []
+concat_format_trans ::  (Ord sy) => 
+                       EpsAutomaton Int sy -> --newB_FSA
+                       Int -> -- startA
+                       [Int] -> -- finalA
+                       Int -> -- startB
+                       [Int] -> -- finalB
+                       [(Int, Maybe sy, Int)] -> -- transitionA 
+                       [(Int, Maybe sy, Int)] -> -- transitionB
+                       EpsAutomaton Int sy -- result 
+concat_format_trans new_fsaB startA finalA startB finalB transitionA transitionB = 
+     let all_trans = format_transitions (format_transitions transitionB (concat_trans finalA startB)) transitionA
+     in
+     (EpsAutomaton (startA, finalB, all_trans))
+
+------------------------------------------------------------------------------------------------------------------
+-- STAR FSA 
+------------------------------------------------------------------------------------------------------------------
 
 
 

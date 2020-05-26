@@ -18,17 +18,11 @@ nt_checker list = case list of [] -> False
                                ((NT s):xs) -> True 
                                ((T s):xs) -> nt_checker xs
 
-
--- leaves (NonLeaf "S" (Leaf "NP" "Mary") (Leaf "VP" "ran"))
--- If the thing says leaf, then extract 
+-------------------------------------------------------------------------------
 
 leaves :: Tree nt t -> [t]
 leaves (Leaf nt t) = t : []
 leaves (NonLeaf nt t1 t2) = concat [(leaves t1), (leaves t2)]
-
---leaf_helper :: Tree nt t -> t
---leaf_helper (Leaf nt t) = t 
---leaf_helper (NonLeaf nt t1 t2) = leaf_helper t1 : leaf_helper t2
 
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------
@@ -55,7 +49,38 @@ do_rhs phrase tree = case phrase of [] -> []
 
 do_lhs :: [Symbol nt t] -> [[Symbol nt t]] -> [[Symbol nt t]]
 do_lhs phrase tree = case tree of [] -> []
-                                  (x:xs) -> (phrase++x):(do_lhs phrase xs)                                
+                                  (x:xs) -> (phrase++x):(do_lhs phrase xs)    
+
+-------------------------------------------------------------------------------
+
+ruleListToTree :: (Eq nt, Eq t) => [RewriteRule nt t] -> Maybe (Tree nt t)
+ruleListToTree ruleList = case ruleList of [] -> Nothing
+                                           _ -> ruleListToTree_HELPER ruleList
+
+ruleListToTree_HELPER :: (Eq nt, Eq t) => [RewriteRule nt t] -> Maybe (Tree nt t)
+ruleListToTree_HELPER ruleList = ruleListToTree_HELPER_2 (createTree ruleList (findRootNode ruleList))
+
+ruleListToTree_HELPER_2 ::  Maybe ((Tree nt t), [RewriteRule nt t]) ->  Maybe (Tree nt t)                               
+ruleListToTree_HELPER_2 (Just (tree, [])) = Just tree
+ruleListToTree_HELPER_2 _ = Nothing
+
+
+createTree :: (Eq nt, Eq t) => [RewriteRule nt t] -> nt -> Maybe ((Tree nt t), [RewriteRule nt t])
+createTree rules symbol = case rules of [] -> Nothing
+                                        ((TerminalRule nt t):rs) -> if (symbol == nt) then Just ((Leaf nt t), rs)
+                                                           else Nothing
+                                        ((NonterminalRule nt (t1, t2)):rs) -> if (symbol == nt) then let createLeft = createTree rs t1 in
+                                                                               case createLeft of
+                                                                                   Nothing -> Nothing
+                                                                                   Just (leftTree, rs) ->
+                                                                                       let createRight = createTree rs t2 in
+                                                                                       case createRight of Nothing -> Nothing
+                                                                                                           Just (rightTree, rs) -> Just (NonLeaf nt leftTree rightTree, rs)
+                                                                              else Nothing
+
+findRootNode :: [RewriteRule nt t] -> nt
+findRootNode (x:xs) = case x of (NonterminalRule nt _) -> nt
+                                (TerminalRule nt _) -> nt                                           
 
 -------------------------------------------------------------------------------
 -------------------------------------------------------------------------------

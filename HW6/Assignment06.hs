@@ -10,13 +10,13 @@ import CFG
 -------------------------------------------------------------------------------
 
 terminalsOnly :: [Symbol nt t] -> Maybe [t]
-terminalsOnly string = case (nt_checker string) of True -> Nothing
-                                                   False -> Just (map (\(T str) -> str) string)
+terminalsOnly input = case (nt_checker input) of True -> Nothing
+                                                 False -> Just (map (\(T x) -> x) input)
 
 nt_checker :: [Symbol nt t] -> Bool
 nt_checker list = case list of [] -> False 
-                               ((NT s):xs) -> True 
-                               ((T s):xs) -> nt_checker xs
+                               ((NT _):_) -> True 
+                               ((T _):xs) -> nt_checker xs
 
 -------------------------------------------------------------------------------
 
@@ -28,68 +28,88 @@ leaves (NonLeaf nt t1 t2) = concat [(leaves t1), (leaves t2)]
 -------------------------------------------------------------------------------
 
 treeToRuleList :: Tree nt t -> [RewriteRule nt t]
-treeToRuleList tree = case tree of (Leaf nt t) -> [TerminalRule nt t]
-                                   (NonLeaf nt t1 t2) -> (NonterminalRule nt (root t1, root t2)):(treeToRuleList t1)++(treeToRuleList t2)
+treeToRuleList tree = case tree of (Leaf nt t) -> (TerminalRule nt t) : []
+                                   (NonLeaf nt t1 t2) -> treeToRuleList_HELPER tree
 
-treeToDerivation :: Tree nt t -> [[Symbol nt t]]
-treeToDerivation tree = case tree of (Leaf nt t) -> [[NT nt], [T t]]
-                                     (NonLeaf nt t1 t2) -> treeToDerivation_HELPER tree
-
-treeToDerivation_HELPER :: Tree nt t -> [[Symbol nt t]]
-treeToDerivation_HELPER (NonLeaf nt t1 t2) = 
-    let derivedLeft = treeToDerivation t1 in
-    let attachedRight = do_rhs derivedLeft t2 in
-    let derivedRight = treeToDerivation t2 in
-    let attachedLeft = do_lhs (last derivedLeft) derivedRight in
-    ([NT nt]:(attachedRight++(tail attachedLeft)))
-
-do_rhs :: [[Symbol nt t]] -> Tree nt t -> [[Symbol nt t]]
-do_rhs phrase tree = case phrase of [] -> []
-                                    (x:xs) -> (x++[NT (root tree)]):(do_rhs xs tree)
-
-do_lhs :: [Symbol nt t] -> [[Symbol nt t]] -> [[Symbol nt t]]
-do_lhs phrase tree = case tree of [] -> []
-                                  (x:xs) -> (phrase++x):(do_lhs phrase xs)    
+treeToRuleList_HELPER :: Tree nt t -> [RewriteRule nt t]
+treeToRuleList_HELPER (NonLeaf nt t1 t2) = let first_part = (NonterminalRule nt (root t1, root t2)):(treeToRuleList t1) -- does concat 
+                                               second_part = treeToRuleList t2 -- recursive step 
+                                           in first_part ++ second_part -- put steps together 
 
 -------------------------------------------------------------------------------
 
 ruleListToTree :: (Eq nt, Eq t) => [RewriteRule nt t] -> Maybe (Tree nt t)
-ruleListToTree ruleList = case ruleList of [] -> Nothing
-                                           _ -> ruleListToTree_HELPER ruleList
+ruleListToTree input = case input of [] -> Nothing
+                                     _ -> ruleListToTree_HELPER input
 
 ruleListToTree_HELPER :: (Eq nt, Eq t) => [RewriteRule nt t] -> Maybe (Tree nt t)
-ruleListToTree_HELPER ruleList = ruleListToTree_HELPER_2 (createTree ruleList (findRootNode ruleList))
+ruleListToTree_HELPER input = ruleListToTree_HELPER_2 (formatTree input (findRootNode input))
 
 ruleListToTree_HELPER_2 ::  Maybe ((Tree nt t), [RewriteRule nt t]) ->  Maybe (Tree nt t)                               
 ruleListToTree_HELPER_2 (Just (tree, [])) = Just tree
 ruleListToTree_HELPER_2 _ = Nothing
 
+formatTree :: (Eq nt, Eq t) => [RewriteRule nt t] -> nt -> Maybe ((Tree nt t), [RewriteRule nt t])
+formatTree rules symbol = case rules of [] -> Nothing
+                                        ((TerminalRule nt t): rest) -> parse_terminals rules symbol
+                                        ((NonterminalRule nt (t1, t2)): rest) -> parse_nonterminals rules symbol 
+                                                                              
 
-createTree :: (Eq nt, Eq t) => [RewriteRule nt t] -> nt -> Maybe ((Tree nt t), [RewriteRule nt t])
-createTree rules symbol = case rules of [] -> Nothing
-                                        ((TerminalRule nt t):rs) -> if (symbol == nt) then Just ((Leaf nt t), rs)
-                                                           else Nothing
-                                        ((NonterminalRule nt (t1, t2)):rs) -> if (symbol == nt) then let createLeft = createTree rs t1 in
-                                                                               case createLeft of
-                                                                                   Nothing -> Nothing
-                                                                                   Just (leftTree, rs) ->
-                                                                                       let createRight = createTree rs t2 in
-                                                                                       case createRight of Nothing -> Nothing
-                                                                                                           Just (rightTree, rs) -> Just (NonLeaf nt leftTree rightTree, rs)
-                                                                              else Nothing
+parse_terminals :: (Eq nt, Eq t) => [RewriteRule nt t] -> nt -> Maybe ((Tree nt t), [RewriteRule nt t])
+parse_terminals ((TerminalRule nt t) : rest) symbol = case (symbol == nt) of True -> Just ((Leaf nt t), rest)
+                                                                             False -> Nothing
 
+parse_nonterminals :: (Eq nt, Eq t) => [RewriteRule nt t] -> nt -> Maybe ((Tree nt t), [RewriteRule nt t])
+parse_nonterminals ((NonterminalRule nt (t1, t2)): rest) symbol = case (symbol == nt) of True -> parse_nonterminals_HELPER (formatTree rest t1) nt rest t2 
+                                                                                         False -> Nothing 
+
+parse_nonterminals_HELPER :: (Eq nt, Eq t) => 
+                             Maybe ((Tree nt t), [RewriteRule nt t]) --formatTree_output
+                             -> nt -- nt 
+                             -> [RewriteRule nt t] -- rest 
+                             -> nt -- t2 
+                             -> Maybe ((Tree nt t), [RewriteRule nt t])
+
+parse_nonterminals_HELPER formatLtree_output nt rest t2 = case formatLtree_output of Just (left_x, left_xs) -> parse_nonterminals_HELPER_2 formatLtree_output (formatTree left_xs t2) nt rest left_x
+                                                                                     Nothing -> Nothing 
+
+parse_nonterminals_HELPER_2 :: (Eq nt, Eq t) => 
+                             Maybe ((Tree nt t), [RewriteRule nt t]) --formatLtree_output
+                             -> Maybe ((Tree nt t), [RewriteRule nt t]) --formatRtree_output
+                             -> nt -- nt 
+                             ->  [RewriteRule nt t] -- rest 
+                             -> (Tree nt t) -- left_x
+                             -> Maybe ((Tree nt t), [RewriteRule nt t])
+parse_nonterminals_HELPER_2 formatLtree_output formatRtree_output nt rest left_x = case formatRtree_output of Just (right_x, right_xs) -> Just (NonLeaf nt left_x right_x, right_xs)  
+                                                                                                              Nothing -> Nothing 
 findRootNode :: [RewriteRule nt t] -> nt
 findRootNode (x:xs) = case x of (NonterminalRule nt _) -> nt
                                 (TerminalRule nt _) -> nt                                           
 
 -------------------------------------------------------------------------------
+
+treeToDerivation :: Tree nt t -> [[Symbol nt t]]
+treeToDerivation tree = case tree of (Leaf nt t) -> [[NT nt], [T t]]
+                                     (NonLeaf nt t1 t2) -> treeToDerivation_HELPER tree tree 
+
+treeToDerivation_HELPER :: Tree nt t -> Tree nt t  -> [[Symbol nt t]]
+treeToDerivation_HELPER tree (NonLeaf nt t1 t2) =  let new_left = treeToDerivation t1 
+                                                       new_right = treeToDerivation t2
+                                                   in treeToDerivation_HELPER_2 new_left new_right tree 
+
+treeToDerivation_HELPER_2 :: [[Symbol nt t]] -> [[Symbol nt t]] -> Tree nt t -> [[Symbol nt t]] 
+treeToDerivation_HELPER_2 new_left new_right (NonLeaf nt t1 t2) = 
+    let processed_t2 = map (\x -> x ++ [NT (root t2)]) new_left 
+        processed_new_left = map (\x -> (last new_left) ++ x) new_right
+    in ([NT nt]:(processed_t2++(tail processed_new_left)))  
+
 -------------------------------------------------------------------------------
 
 splitAtLeftmost :: (Eq nt, Eq t)
                 => [Symbol nt t]
                 -> Maybe ([Symbol nt t], nt, [Symbol nt t])
 splitAtLeftmost phrase = case phrase of [] -> Nothing
-                                        ((NT s):rs) -> Just ([], s, rs)
+                                        ((NT x):xs) -> Just ([], x, xs)
                                         _ -> splitAtLeftmost_HELPER phrase
 
 splitAtLeftmost_HELPER :: (Eq nt, Eq t)
@@ -103,32 +123,7 @@ rewriteLeftmost :: (Eq nt, Eq t)
                 => [RewriteRule nt t]
                 -> [Symbol nt t]
                 -> [[Symbol nt t]]
-rewriteLeftmost rules input = case (splitAtLeftmost input) of Nothing -> input : []
-                                                              _  ->rewriteLeftmost_HELPER rules (splitAtLeftmost input)
-       
-rewriteLeftmost_HELPER :: (Eq nt, Eq t) => [RewriteRule nt t] -> Maybe ([Symbol nt t], nt, [Symbol nt t]) -> [[Symbol nt t]]
-rewriteLeftmost_HELPER rules (Just (nt_before, nt, nt_after)) = rule_replacement nt_before (matching_rules nt rules) nt_after
-
-
-matching_rules :: (Eq nt) => nt -> [RewriteRule nt t] -> [RewriteRule nt t]
-matching_rules target rules = case rules of [] -> []
-                                            ((NonterminalRule nt (a, b)):xs) -> handle_nt target rules 
-                                            ((TerminalRule nt t):xs) -> handle_t target rules 
-
-handle_nt :: (Eq nt) => nt -> [RewriteRule nt t] -> [RewriteRule nt t]
-handle_nt target ((NonterminalRule nt (a, b)):xs) = case (target == nt) of True -> (NonterminalRule nt (a, b)):(matching_rules target xs)
-                                                                           False -> matching_rules target xs
-
-
-handle_t :: (Eq nt) => nt -> [RewriteRule nt t] -> [RewriteRule nt t]
-handle_t target ((TerminalRule nt t):xs) = case (target == nt) of True -> (TerminalRule nt t):(matching_rules target xs)
-                                                                  False -> matching_rules target xs
-
-rule_replacement :: [Symbol nt t] -> [RewriteRule nt t] -> [Symbol nt t] -> [[Symbol nt t]]
-rule_replacement nt_before rules nt_after= case rules of [] -> []
-                                                         ((NonterminalRule nt (t1, t2)):xs) -> (nt_before++[NT t1, NT t2]++nt_after) : (rule_replacement nt_before xs nt_after)
-                                                         ((TerminalRule nt t):xs) -> (nt_before++[T t]++nt_after):(rule_replacement nt_before xs nt_after)
-
+rewriteLeftmost rules input = undefined
 -------------------------------------------------------------------------------
 derivableFrom :: (Eq nt, Eq t)
               => [Symbol nt t]

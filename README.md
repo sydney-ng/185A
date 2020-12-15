@@ -5,13 +5,13 @@
 
 Computational linguistics is a large, multifaceted and rapidly expanding field. There are many
 different kinds of work that might be classified as “computational linguistics”, differing in
-• goals (e.g., build a useful gadget, test a linguistic theory), and
-• empirical domains (e.g., sounds, words, sentences),
+1. goals (e.g., build a useful gadget, test a linguistic theory), and
+2. empirical domains (e.g., sounds, words, sentences),
 
 ## Skills Demonstrated 
-• recursive generation of infinitely many expressions by a finite machine,
-• interchangeability/intersubstitutability of subexpressions within larger expressions, and
-• the relationship between discrete structures and probabilistic models.
+1. recursive generation of infinitely many expressions by a finite machine,
+2. interchangeability/intersubstitutability of subexpressions within larger expressions, and
+3. the relationship between discrete structures and probabilistic models.
 
 # Projects 
 Description of the following work: 
